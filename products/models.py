@@ -42,6 +42,14 @@ class Product(models.Model):
     def __str__(self):
         return self.name
     
+class Image(models.Model):
+    variant = models.ForeignKey('Variant', related_name='images', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='variant_images/', blank=True, null=True    )
+    alt_text = models.CharField(max_length=200, blank=True, null=True)
+
+    def __str__(self):
+        return f"Image for {self.variant.name}"
+    
 class Variant(models.Model):
     product = models.ForeignKey(Product, related_name='variants', on_delete=models.CASCADE)
     name = models.CharField(max_length=100)

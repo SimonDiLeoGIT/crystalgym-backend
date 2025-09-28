@@ -16,16 +16,34 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 from rest_framework import routers
 
 from products import views
 
+
 router = routers.DefaultRouter()
-# router.register(r'products', views.UserViewSet)
+
 router.register(r'categories', views.CategoryViewSet)
+router.register(r'products', views.ProductViewSet)
+router.register(r'variants', views.VariantViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
     path('admin/', admin.site.urls),
+    path(
+        'categories-by-gender/',
+        views.get_categories_classified_by_gender,
+        name='categories-classified-by-gender'
+    ),
+    path(
+        'products/<int:gender_id>/<int:category_id>/',
+        views.get_products_by_category_gender,
+        name='products-by-category-gender'
+    ),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
