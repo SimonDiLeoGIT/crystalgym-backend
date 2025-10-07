@@ -32,6 +32,7 @@ class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = '__all__'
+        read_only_fields = ['variant']
     
     # convert image field to URL
     # without this, it returns variant_images/filename.jpg
@@ -43,7 +44,7 @@ class ImageSerializer(serializers.ModelSerializer):
         return rep
 
 class VariantSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
     color = ColorSerializer(read_only=True)
     size = SizeSerializer(read_only=True)
     images = ImageSerializer(many=True, required=False)
@@ -58,3 +59,16 @@ class VariantSerializer(serializers.ModelSerializer):
         for image_data in images_data:
             Image.objects.create(variant=variant, **image_data)
         return variant
+
+class SizeVariantSerializer(serializers.Serializer):
+    stock = serializers.IntegerField()
+    size = serializers.CharField()
+
+class GroupByColorVariantSerializer(serializers.Serializer):
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
+    name = serializers.CharField()
+    sizes = SizeVariantSerializer(many=True)  
+    color = ColorSerializer(read_only=True)
+    image = ImageSerializer()
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    

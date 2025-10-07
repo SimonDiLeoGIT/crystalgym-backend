@@ -43,6 +43,11 @@ urlpatterns = [
         views.get_products_by_category_gender,
         name='products-by-category-gender'
     ),
+    path(
+        'variants/<int:gender_id>/<int:category_id>/',
+        views.get_variants_by_category_gender,
+        name='variants-by-category-gender'
+    ),
 ]
 
 if settings.DEBUG:

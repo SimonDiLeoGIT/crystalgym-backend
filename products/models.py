@@ -54,8 +54,8 @@ class Variant(models.Model):
     product = models.ForeignKey(Product, related_name='variants', on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     sku = models.CharField(max_length=50, unique=True)
-    color = models.ForeignKey(Color, related_name='variants', on_delete=models.CASCADE)
-    size = models.ForeignKey(Size, related_name='variants', on_delete=models.CASCADE)
+    color = models.ForeignKey(Color, related_name='variants', on_delete=models.CASCADE, blank=True, null=True)
+    size = models.ForeignKey(Size, related_name='variants', on_delete=models.CASCADE, blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField()
 

@@ -1,15 +1,18 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
-from .models import Category, Gender, Product
+from .models import Category, Gender, Product, Variant, Image
+from .serializers import VariantSerializer
 from datetime import date
+from django.contrib.auth.models import User
 
-class GetProductsByCategoryGenderTests(TestCase):
+class ProductsTests(TestCase):
 
     def setUp(self):
         # Create test data
         self.client = APIClient()
-
+        self.user = User.objects.create_user(username='testuser', password='1234')
+        self.client.force_authenticate(user=self.user)
         self.category = Category.objects.create(name="Hoodies", description="All hoodies")
         self.gender = Gender.objects.create(name="Men")
 
@@ -64,6 +67,34 @@ class GetProductsByCategoryGenderTests(TestCase):
         # We expect only one product
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]['name'], 'Hoodie 1')
+
+    def test_create_variant_with_images(self):
+        variant_data = {
+            "product": self.product1.id,
+            "name": "Hoodie 1 - Red - M",
+            "sku": "HD1-RED-M",
+            "color": None,
+            "size": None,
+            "price": "49.99",
+            "stock": 100,
+            "images": [
+                {"alt_text": "Front view"},
+                {"alt_text": "Back view"}
+            ]
+        }
+
+        serializer = VariantSerializer(data=variant_data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+        variant = serializer.save()
+
+        # Assertions
+        self.assertEqual(Variant.objects.count(), 1)
+        self.assertEqual(Image.objects.count(), 2)
+        self.assertEqual(variant.name, variant_data["name"])
+        self.assertEqual(variant.images.first().alt_text, "Front view")
+        
+        
 
     
 
