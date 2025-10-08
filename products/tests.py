@@ -1,7 +1,7 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
-from .models import Category, Gender, Product, Variant, Image
+from .models import Category, Gender, Product, Variant, Image, Color, Size
 from .serializers import VariantSerializer
 from datetime import date
 from django.contrib.auth.models import User
@@ -41,6 +41,17 @@ class ProductsTests(TestCase):
             release_date=date.today(),
             category=self.category,
             gender=other_gender
+        )
+        self.color = Color.objects.create(name='red')
+        self.size = Size.objects.create(name='XL')
+        Variant.objects.create(
+            product=self.product1,
+            name='Variant Test 1',
+            sku='ABC',
+            color=self.color,
+            size=self.size,
+            price=24.56,
+            stock=24,
         )
 
     def test_get_categories_classified_by_gender(self):
@@ -89,11 +100,19 @@ class ProductsTests(TestCase):
         variant = serializer.save()
 
         # Assertions
-        self.assertEqual(Variant.objects.count(), 1)
+        self.assertEqual(Variant.objects.count(), 2)
         self.assertEqual(Image.objects.count(), 2)
         self.assertEqual(variant.name, variant_data["name"])
         self.assertEqual(variant.images.first().alt_text, "Front view")
-        
+
+    def test_get_variants_by_gender_and_category(self):
+        url='/variants/1/1/'
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual('Variant Test 1', data[0]['name'])
         
 
     
