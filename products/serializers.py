@@ -46,7 +46,6 @@ class ImageSerializer(serializers.ModelSerializer):
 class VariantSerializer(serializers.ModelSerializer):
     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
     color = ColorSerializer(read_only=True)
-    size = SizeSerializer(read_only=True)
     images = ImageSerializer(many=True, required=False)
     
     class Meta:
@@ -64,9 +63,10 @@ class SizeVariantSerializer(serializers.Serializer):
     stock = serializers.IntegerField()
     size = serializers.CharField()
 
-class GroupByColorVariantSerializer(serializers.Serializer):
+class GroupByColorProductSerializer(serializers.Serializer):
     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
     name = serializers.CharField()
+    sku = serializers.CharField()
     sizes = SizeVariantSerializer(many=True)  
     color = ColorSerializer(read_only=True)
     image = ImageSerializer()

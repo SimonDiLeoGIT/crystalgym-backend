@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, Category, Variant, Color, Gender, Size, Image
+from .models import Product, Category, Variant, Color, Gender, Size, Image, VariantSize
 
 admin.site.index_title = "Crystal Gym Admin"
 admin.site.site_header = "Crystal Gym Admin"
@@ -10,6 +10,7 @@ admin.site.register(Product)
 admin.site.register(Color)
 admin.site.register(Gender)
 admin.site.register(Size)
+admin.site.register(VariantSize)
 
 class ImageInline(admin.TabularInline):
     model = Image
@@ -17,5 +18,5 @@ class ImageInline(admin.TabularInline):
 
 @admin.register(Variant)
 class VariantAdmin(admin.ModelAdmin):
-    list_display = ('name', 'product', 'sku', 'price', 'stock')
+    list_display = ('name', 'product', 'sku')
     inlines = [ImageInline] 

@@ -39,14 +39,14 @@ urlpatterns = [
         name='categories-classified-by-gender'
     ),
     path(
-        'products/<int:gender_id>/<int:category_id>/',
+        'products/<str:gender_name>/<str:category_name>/',
         views.get_products_by_category_gender,
         name='products-by-category-gender'
     ),
     path(
-        'variants/<str:gender_name>/<str:category_name>/',
-        views.get_variants_by_category_gender,
-        name='variants-by-category-gender'
+        'variants/sku/<str:sku>/',
+        views.get_variant_by_sku,
+        name='variant-by-sku'
     ),
 ]
 

@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.core.paginator import Paginator
 from .models import Category, Product, Variant, Gender
-from .serializers import CategorySerializer, ProductSerializer, VariantSerializer, GroupByColorVariantSerializer
+from .serializers import CategorySerializer, ProductSerializer, VariantSerializer, GroupByColorProductSerializer
 
 import pprint
 
@@ -52,13 +52,11 @@ def get_categories_classified_by_gender(request):
     return Response(data)
 
 @api_view(['GET'])
-def get_products_by_category_gender(request, gender_id, category_id):
-    products = Product.objects.filter(category_id=category_id, gender_id=gender_id)
-    serializer = ProductSerializer(products, many=True)
-    return Response(serializer.data)
-
-@api_view(['GET'])
-def get_variants_by_category_gender(request, gender_name, category_name):
+def get_products_by_category_gender(request, gender_name, category_name):
+    if not Gender.objects.filter(name__iexact=gender_name).exists():
+        return Response({"detail":"Gender not found."}, status=404)
+    if not Category.objects.filter(name__iexact=category_name).exists():
+        return Response({"detail":"Category not found."}, status=404)
     products = Product.objects.filter(category__name__iexact=category_name, gender__name__iexact=gender_name)
     variants = Variant.objects.filter(product__in=products).prefetch_related('images')
     variants_categorized_by_colors=[]
@@ -70,22 +68,35 @@ def get_variants_by_category_gender(request, gender_name, category_name):
         if not formated_variant:
             formated_variant = {
                 'product':variant.product,
+                'sku':variant.sku,
                 'color':variant.color,
                 'image':variant.images.first(),
                 'name':variant.name,
-                'price':variant.price,
+                'price':variant.product.price,
                 'sizes':[]
             }
             variants_categorized_by_colors.append(formated_variant)
         
-        formated_variant['sizes'].append({
-            'size':variant.size,
-            'stock':variant.stock
-        })
+        variant_sizes = variant.variant_sizes.all()
+        for variant_size in variant_sizes:
+            formated_variant['sizes'].append({
+                'size':variant_size.size.name,
+                'stock':variant_size.stock
+            })
 
     paginator = PageNumberPagination()
     paginator.page_size = int(request.query_params.get('page_size', 10))
     result_page = paginator.paginate_queryset(variants_categorized_by_colors, request)
 
-    serializer = GroupByColorVariantSerializer(result_page , many=True)
+    serializer = GroupByColorProductSerializer(result_page , many=True)
     return paginator.get_paginated_response(serializer.data)
+
+@api_view(['GET'])
+def get_variant_by_sku(request, sku):
+    try:
+        variant = Variant.objects.get(sku=sku)
+    except Variant.DoesNotExist:
+        return Response({"detail":"Variant not found."}, status=404)
+    
+    serializer = VariantSerializer(variant)
+    return Response(serializer.data)

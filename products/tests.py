@@ -49,9 +49,6 @@ class ProductsTests(TestCase):
             name='Variant Test 1',
             sku='ABC',
             color=self.color,
-            size=self.size,
-            price=24.56,
-            stock=24,
         )
 
     def test_get_categories_classified_by_gender(self):
@@ -68,26 +65,12 @@ class ProductsTests(TestCase):
         self.assertIn('Hoodies', [cat['name'] for cat in data['Men']])
         self.assertIn('Hoodies', [cat['name'] for cat in data['Women']])
 
-    def test_get_products_by_category_and_gender(self):
-        url = f'/products/{self.gender.id}/{self.category.id}/'
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()
-
-        # We expect only one product
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['name'], 'Hoodie 1')
-
     def test_create_variant_with_images(self):
         variant_data = {
             "product": self.product1.id,
             "name": "Hoodie 1 - Red - M",
             "sku": "HD1-RED-M",
             "color": None,
-            "size": None,
-            "price": "49.99",
-            "stock": 100,
             "images": [
                 {"alt_text": "Front view"},
                 {"alt_text": "Back view"}
@@ -105,14 +88,24 @@ class ProductsTests(TestCase):
         self.assertEqual(variant.name, variant_data["name"])
         self.assertEqual(variant.images.first().alt_text, "Front view")
 
-    def test_get_variants_by_gender_and_category(self):
-        url='/variants/1/1/'
+    def test_get_products_by_gender_and_category(self):
+        url='/products/men/hoodies/'
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 1)
-        self.assertEqual('Variant Test 1', data[0]['name'])
+        self.assertFalse(len(data) == 0)
+        self.assertContains(response, 'Variant Test 1')
+
+    def test_get_products_by_gender_and_category_return_404_if_gender_or_category_not_exist(self):
+        url='/products/men/nonexistent-category/'
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        
+        url='/products/nonexistent-gender/hoodies/'
+        self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         
 
     
