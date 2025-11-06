@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.core.paginator import Paginator
 from .models import Category, Product, Variant, Gender
-from .serializers import CategorySerializer, ProductSerializer, VariantSerializer, GroupByColorProductSerializer
+from .serializers import CategorySerializer, ProductSerializer, VariantSerializer, VariantWithProductSerializer, ImageSerializer, GroupByColorProductSerializer
 
 import pprint
 
@@ -46,7 +46,7 @@ def get_categories_classified_by_gender(request):
         products = Product.objects.filter(category=category)
         for product in products:
             gender_name = product.gender.name
-            if category.name not in data[gender_name]:
+            if not any(c['name'] == category.name for c in data[gender_name]):
                 data[gender_name].append(CategorySerializer(category).data)
 
     return Response(data)
@@ -73,7 +73,8 @@ def get_products_by_category_gender(request, gender_name, category_name):
                 'image':variant.images.first(),
                 'name':variant.name,
                 'price':variant.product.price,
-                'sizes':[]
+                'sizes':[],
+                'category':variant.product.category.name,
             }
             variants_categorized_by_colors.append(formated_variant)
         
@@ -98,5 +99,27 @@ def get_variant_by_sku(request, sku):
     except Variant.DoesNotExist:
         return Response({"detail":"Variant not found."}, status=404)
     
-    serializer = VariantSerializer(variant)
+    serializer = VariantWithProductSerializer(variant)
     return Response(serializer.data)
+
+@api_view(['GET'])
+def get_variants_by_product_id(request, product_id):
+    variants = Variant.objects.filter(product_id=product_id)
+    
+    if not variants.exists():
+        return Response(
+            {"detail": f"Variants not found for product with id {product_id}."},
+            status=404
+        )
+    
+    serializer = VariantSerializer(variants, many=True)
+
+    data = serializer.data
+
+    #  Add image field for first image
+    for variant in data:
+        variant_obj = variants.get(id=variant['id'])
+        first_image = variant_obj.images.first()
+        variant['image'] = ImageSerializer(first_image).data if first_image else None
+
+    return Response(data)

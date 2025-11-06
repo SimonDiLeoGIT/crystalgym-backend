@@ -48,6 +48,11 @@ urlpatterns = [
         views.get_variant_by_sku,
         name='variant-by-sku'
     ),
+    path(
+        'variants/product/<int:product_id>/',
+        views.get_variants_by_product_id,
+        name='variants-by-product-id'
+    ),
 ]
 
 if settings.DEBUG:

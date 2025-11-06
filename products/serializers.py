@@ -59,6 +59,22 @@ class VariantSerializer(serializers.ModelSerializer):
             Image.objects.create(variant=variant, **image_data)
         return variant
 
+class VariantWithProductSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    color = ColorSerializer(read_only=True)
+    images = ImageSerializer(many=True, required=False)
+    
+    class Meta:
+        model = Variant
+        fields = '__all__'
+
+    def create(self, validated_data):
+        images_data = validated_data.pop('images', [])
+        variant = Variant.objects.create(**validated_data)
+        for image_data in images_data:
+            Image.objects.create(variant=variant, **image_data)
+        return variant
+
 class SizeVariantSerializer(serializers.Serializer):
     stock = serializers.IntegerField()
     size = serializers.CharField()
@@ -71,4 +87,5 @@ class GroupByColorProductSerializer(serializers.Serializer):
     color = ColorSerializer(read_only=True)
     image = ImageSerializer()
     price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    category = serializers.CharField()  
     
